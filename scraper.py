@@ -7,13 +7,33 @@ def scrape_data(start_url, num_pages, output_file):
     
     for page in range(1, num_pages + 1):
         url = f"{start_url}?page={page}"
+        print(f"Scraping page: {url}")
         response = requests.get(url)
-        soup = BeautifulSoup(response.text, "html.parser")
+        if response.status_code != 200:
+            print(f"Echec d'afficge de la page {page}. Arrêt.")
+            break
+        soup = BeautifulSoup(response.content, "html.parser")
+        _cards = soup.find_all("div", class_ = "ad__card")
+        if not _cards:
+            print("Limite de donnée atteinte. Arrêt.")
+            break
         
-        # Exemple de scraping : extraire les titres des articles
-        items = soup.find_all("h2", class_="title")
-        for item in items:
-            data.append({"title": item.text.strip()})
+        for i in _cards:
+            try:
+                nom = i.find('a')['title']
+                prix = i.find('a').find('span')['data-ad-price']
+                adresse = i.find('p', class_ = "ad__card-location").find('span').text.strip()
+                image = i.find('img')['src'] 
+                data.append({
+                    'nom' : nom,
+                    'prix' : prix,
+                    'adresse' : adresse,
+                    'image' : image})
+            except AttributeError:
+                continue
+        page += 1
+
+    return data
     
     df = pd.DataFrame(data)
     df.to_csv(output_file, index=False)
