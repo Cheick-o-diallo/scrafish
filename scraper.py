@@ -5,35 +5,36 @@ import pandas as pd
 def scrape_data(start_url, num_pages, output_file):
     data = []
     
-    for page in range(1, num_pages + 1):
-        url = f"{start_url}?page={page}"
-        print(f"Scraping page: {url}")
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Echec d'afficge de la page {page}. Arrêt.")
-            break
-        soup = BeautifulSoup(response.content, "html.parser")
-        _cards = soup.find_all("div", class_ = "ad__card")
-        if not _cards:
-            print("Limite de donnée atteinte. Arrêt.")
-            break
-        
-        for i in _cards:
-            try:
-                nom = i.find('a')['title']
-                prix = i.find('a').find('span')['data-ad-price']
-                adresse = i.find('p', class_ = "ad__card-location").find('span').text.strip()
-                image = i.find('img')['src'] 
-                data.append({
-                    'nom' : nom,
-                    'prix' : prix,
-                    'adresse' : adresse,
-                    'image' : image})
-            except AttributeError:
-                continue
-        page += 1
+    while True:
+        for page in range(1, num_pages + 1):
+            url = f"{start_url}?page={page}"
+            print(f"Scraping page: {url}")
+            response = requests.get(url)
+            if response.status_code != 200:
+                print(f"Echec d'afficge de la page {page}. Arrêt.")
+                break
+            soup = BeautifulSoup(response.content, "html.parser")
+            _cards = soup.find_all("div", class_ = "ad__card")
+            if not _cards:
+                print("Limite de donnée atteinte. Arrêt.")
+                break
+            
+            for i in _cards:
+                try:
+                    nom = i.find('a')['title']
+                    prix = i.find('a').find('span')['data-ad-price']
+                    adresse = i.find('p', class_ = "ad__card-location").find('span').text.strip()
+                    image = i.find('img')['src'] 
+                    data.append({
+                        'nom' : nom,
+                        'prix' : prix,
+                        'adresse' : adresse,
+                        'image' : image})
+                except AttributeError:
+                    continue
+            page += 1
 
-    return data
+        return data
     
-    df = pd.DataFrame(data)
-    df.to_csv(output_file, index=False)
+df = pd.DataFrame(scrape_data(start_url))
+df.to_csv("scraped_data.csv", index=False)
