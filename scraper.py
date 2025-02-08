@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
+start_url = input("")
 def scrape_data(start_url, num_pages, output_file):
     data = []
     
